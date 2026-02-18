@@ -6,7 +6,7 @@
 Цей принцип описано в класі [Enemy.cs](Enemies/Enemy.cs)
 Суть наслідування заклюваєтсья в тому що заздалегіть прописані певні базові параметри в батькіському класі,
 а дочірні класи наслідують ці значення з можливістю вносити в них зміни.
-у цього класа є декілька дочірних класи [BossEnemy.cs](Enemies/BossEnemy.cs),[CircularEnemy.cs](Enemies/CircularEnemy.cs),[CommonEnemy.cs](Enemies/CommonEnemy.cs),[MultiAttackEnemy.cs](Enemies/MultiAttackEnemy.cs)
+у цього класа є декілька дочірних класи [BossEnemy.cs](Enemies/BossEnemy.cs), [CircularEnemy.cs](Enemies/CircularEnemy.cs), [CommonEnemy.cs](Enemies/CommonEnemy.cs), [MultiAttackEnemy.cs](Enemies/MultiAttackEnemy.cs)
 
 2. Принцип інкапсуляції
 Суть цього принципу полягає в тому щоб запобігти випадкове викоритання даних в місці це доцього не потребує ситуція.
@@ -16,13 +16,9 @@
 3. Принцип поліморфізму
 Суть цього принципу полягає в тому що один і той самий метод може мати різну реалізацію залежно від об’єкта який його викликає.
 Тобто ми можемо працювати з об’єктами через базовий тип, але фактична поведінка буде визначатись дочірнім класом.
-
-Цей принцип можна побачити в класі [Weapon.cs](General logic/Weapon.cs), де оголошено віртуальний метод [CreateProjectile](General logic/Weapon.cs#L54), який перевизначається в дочірніх класах [AutomaticWeapon.cs](General logic/AutomaticWeapon.cs), [Pistol.cs](General logic/Pistol.cs), [ShotGun.cs](General logic/ShotGun.cs).
-
+Цей принцип можна побачити в класі [Weapon.cs](General logic/Weapon.cs), де оголошено віртуальний метод [CreateProjectile](General logic/Weapon.cs#L54), 
+який перевизначається в дочірніх класах [AutomaticWeapon.cs](General logic/AutomaticWeapon.cs), [Pistol.cs](General logic/Pistol.cs), [ShotGun.cs](General logic/ShotGun.cs).
 В базовому класі метод має спільну логіку або просто визначає контракт, а в дочірніх класах він реалізується по-різному через перевизначення (override).
-
 Таким чином під час виконання програми викликається саме та реалізація методу яка відповідає конкретному типу зброї, навіть якщо звернення відбувається через посилання на базовий клас.
 
-4. Принцип абстракції
-
-Не був використаний в код.
+4. Принцип абстракціїНе був використаний в код.
