@@ -9,9 +9,6 @@ namespace Player
 {
     public class Character
     {
-        private const int StartHelth = 4;
-        private const int StartArmore = 2;
-        private const int StartCoins = 0;
         public int Health { get; set; }
         public Weapon Gun { get; set; }
         public int Armor { get; set; }
@@ -23,11 +20,12 @@ namespace Player
 
         public Character()
         {
-            Health = StartHelth;
+            Health = 4;
             Gun = new Pistol();
-            Armor = StartArmore;
-            Coins = StartCoins;
+            Armor = 2;
+            Coins = 0;
         }
+
 
         public void TakeDamage(int damage)
         {
