@@ -104,87 +104,110 @@ namespace Enemies
             return projectile;
         }
 
-        public virtual void UpdateAI(Point playerPos, bool playerInRoom, double dt, List<Projectile> projectiles, List<Enemy> allEnemiesInRoom, double peaceFulTime)
-        {
-            if (!playerInRoom || !IsAlive)
+        public virtual void UpdateAI(
+            Point playerPos,
+            bool playerInRoom,
+            double dt,
+            List<Projectile> projectiles,
+            List<Enemy> allEnemiesInRoom,
+            double peaceFulTime)
+                {
+            if (!playerInRoom || !IsAlive || Gun == null)
                 return;
 
-            if (Gun == null)
-                return;
-
-            Gun.Update(dt);
+            UpdateWeapon(dt);
 
             double dist = (playerPos - Position).Length;
-            double attackRange = AttackRadius;
-            double bufferZone = 30;
 
-            if (dist <= attackRange - bufferZone)
-            {
-                Direction = new Vector(0, 0);
-                AttackCooldown = FastAttackCooldown;
-            }
-            else if (dist <= attackRange)
-            {
-                Direction = new Vector(0, 0);
-                AttackCooldown = NormalAttackCooldown;
-            }
-            else
-            {
-                Vector toPlayer = playerPos - Position;
-                toPlayer.Normalize();
-                Direction = toPlayer;
-                Vector nextStep = Direction * MoveSpeed * dt;
-                Point nextPos = Position + nextStep;
-
-                Rect enemyRect = new Rect(nextPos.X - 15, nextPos.Y - 15, 30, 30);
-                Rect playerRect = new Rect(playerPos.X - 15, playerPos.Y - 15, 30, 30);
-
-                bool canMove = true;
-                if (enemyRect.IntersectsWith(playerRect))
-                {
-                    canMove = false;
-                }
-                else if (allEnemiesInRoom != null)
-                {
-                    foreach (var other in allEnemiesInRoom)
-                    {
-                        if (other == this || !other.IsAlive) continue;
-                        if (enemyRect.IntersectsWith(other.Bounds))
-                        {
-                            canMove = false;
-                            break;
-                        }
-                    }
-                }
-
-                if (canMove)
-                {
-                    Position = nextPos;
-                }
-                AttackCooldown = NormalAttackCooldown;
-            }
+            HandleAttackCooldown(dist);
+            HandleMovement(playerPos, dist, dt, allEnemiesInRoom);
 
             if (peaceFulTime > 0)
                 return;
 
-            AttackTimer -= dt;
-            if (AttackTimer <= 0)
-            {
-                Vector direction = playerPos - Position;
-                if (direction.Length > 0.01)
-                {
-                    direction.Normalize();
-                    List<Projectile> additionalPellets;
-                    var projectile = Gun.CreateProjectile(Position, direction, this, out additionalPellets);
-                    if (projectile != null)
-                    {
-                        projectiles.Add(projectile);
-                        projectiles.AddRange(additionalPellets);
-                    }
-                }
-                AttackTimer = AttackCooldown;
-            }
+            TryAttack(playerPos, dt, projectiles);
         }
+
+        private void UpdateWeapon(double dt)
+        {
+            Gun.Update(dt);
+        }
+
+        private void HandleAttackCooldown(double dist)
+        {
+            double bufferZone = 30;
+
+            if (dist <= AttackRadius - bufferZone)
+                AttackCooldown = FastAttackCooldown;
+            else
+                AttackCooldown = NormalAttackCooldown;
+        }
+
+        private void HandleMovement(Point playerPos, double dist, double dt, List<Enemy> allEnemies)
+        {
+            if (dist <= AttackRadius)
+            {
+                Direction = new Vector(0, 0);
+                return;
+            }
+
+            Vector toPlayer = playerPos - Position;
+            toPlayer.Normalize();
+            Direction = toPlayer;
+
+            Vector nextStep = Direction * MoveSpeed * dt;
+            Point nextPos = Position + nextStep;
+
+            if (CanMoveTo(nextPos, playerPos, allEnemies))
+                Position = nextPos;
+        }
+
+        private bool CanMoveTo(Point nextPos, Point playerPos, List<Enemy> allEnemies)
+        {
+            Rect enemyRect = new Rect(nextPos.X - 15, nextPos.Y - 15, 30, 30);
+            Rect playerRect = new Rect(playerPos.X - 15, playerPos.Y - 15, 30, 30);
+
+            if (enemyRect.IntersectsWith(playerRect))
+                return false;
+
+            if (allEnemies != null)
+            {
+                foreach (var other in allEnemies)
+                {
+                    if (other == this || !other.IsAlive) continue;
+                    if (enemyRect.IntersectsWith(other.Bounds))
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
+        private void TryAttack(Point playerPos, double dt, List<Projectile> projectiles)
+        {
+            AttackTimer -= dt;
+
+            if (AttackTimer > 0)
+                return;
+
+            Vector direction = playerPos - Position;
+
+            if (direction.Length <= 0.01)
+                return;
+
+            direction.Normalize();
+
+            var projectile = Gun.CreateProjectile(Position, direction, this, out var additionalPellets);
+
+            if (projectile != null)
+            {
+                projectiles.Add(projectile);
+                projectiles.AddRange(additionalPellets);
+            }
+
+            AttackTimer = AttackCooldown;
+        }
+
 
         public virtual void TakeDamage(int damage)
         {
