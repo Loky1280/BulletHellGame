@@ -51,35 +51,63 @@ namespace General_logic
             }
         }
 
-        public virtual Projectile CreateProjectile(Point from, Vector direction, object owner, out List<Projectile> additionalPellets)
+        public virtual Projectile CreateProjectile(
+            Point from,
+            Vector direction,
+            object owner,
+            out List<Projectile> additionalPellets)
         {
             additionalPellets = new List<Projectile>();
-            if (IsReloading || FireTimer > 0)
+
+            if (!CanShoot())
                 return null;
 
-            if (double.IsNaN(from.X) || double.IsNaN(from.Y))
+            if (!IsValidPosition(from))
                 return null;
+
+            PrepareShot();
+
+            direction = NormalizeDirection(direction);
+
+            return GenerateProjectile(from, direction, owner);
+        }
+
+        private bool CanShoot()
+        {
+            if (IsReloading || FireTimer > 0)
+                return false;
 
             if (AmmoInWeapon <= 0)
             {
-                IsReloading = true;
-                ReloadTimer = ReloadTime;
-                return null;
+                StartReload();
+                return false;
             }
 
+            return true;
+        }
+        private bool IsValidPosition(Point from)
+        {
+            return !double.IsNaN(from.X) && !double.IsNaN(from.Y);
+        }
+
+        private void PrepareShot()
+        {
             AmmoInWeapon--;
             FireTimer = FireRate;
+        }
 
+        private Vector NormalizeDirection(Vector direction)
+        {
             if (direction.Length == 0)
-            {
-                direction = new Vector(1, 0);
-            }
-            else
-            {
-                direction.Normalize();
-            }
+                return new Vector(1, 0);
 
-            var projectile = new Projectile
+            direction.Normalize();
+            return direction;
+        }
+
+        private Projectile GenerateProjectile(Point from, Vector direction, object owner)
+        {
+            return new Projectile
             {
                 Position = from,
                 Velocity = direction,
@@ -87,9 +115,14 @@ namespace General_logic
                 Damage = Damage,
                 Owner = owner
             };
-
-            return projectile;
         }
+
+        private void StartReload()
+        {
+            IsReloading = true;
+            ReloadTimer = ReloadTime;
+        }
+
 
         public virtual void Reload()
         {
